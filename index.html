@@ -42,12 +42,13 @@ async function checkPw() {
 }
 function renderDashboard() {
   // atob() gives a byte string (Latin-1); decode it as UTF-8 properly so
-  // umlauts/emoji in the dashboard don't get mangled.
+  // umlauts/emoji in the dashboard don't get mangled. document.write() after
+  // the page already loaded is unreliable (mixes with existing DOM) - build
+  // a blob: URL and navigate to it instead, which gives a clean fresh document.
   const bytes = Uint8Array.from(atob(DASHBOARD_B64), c => c.charCodeAt(0));
-  const html = new TextDecoder('utf-8').decode(bytes);
-  document.open();
-  document.write(html);
-  document.close();
+  const blob = new Blob([bytes], {type: 'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  window.location.replace(url);
 }
 document.getElementById('pw').addEventListener('keydown', e => { if (e.key === 'Enter') checkPw(); });
 // Skip prompt if already authed this browser session
